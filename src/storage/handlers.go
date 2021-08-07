@@ -2,6 +2,7 @@ package storage
 
 import (
 	"crypto/hmac"
+	"errors"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
@@ -80,8 +81,8 @@ func (u *UserClaims) Valid() error {
 	return nil
 }
 
-// CreateToken use for creating JWT token
-func (conf *AppConfig) CreateToken(uc *UserClaims) (string, error) {
+// CreateSignedToken use for creating JWT token
+func (conf *AppConfig) CreateSignedToken(uc *UserClaims) (string, error) {
 	token := jwt.NewWithClaims(conf.JwtConf.JwtKeyMethod, uc)
 	signedToken, err := token.SignedString(conf.Key)
 	if err != nil {
@@ -90,4 +91,24 @@ func (conf *AppConfig) CreateToken(uc *UserClaims) (string, error) {
 	}
 
 	return signedToken, nil
+}
+
+func (conf *AppConfig) ParseSignedToken(signedToken string) (*UserClaims, error) {
+	token, err := jwt.ParseWithClaims(signedToken, &UserClaims{}, func(t *jwt.Token) (interface{}, error) {
+		if t.Method.Alg() != jwt.SigningMethodHS512.Alg() {
+			return nil, fmt.Errorf("invalid signing signing algorithm")
+		}
+
+		return conf.Key, nil
+	})
+
+	if err != nil {
+		return nil, errors.New("error in parsing token : " + err.Error())
+	}
+
+	if !token.Valid {
+		return nil, errors.New("error in parsing token : token is invalid")
+	}
+
+	return token.Claims.(*UserClaims), nil
 }
