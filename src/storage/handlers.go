@@ -6,14 +6,20 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"hash"
 	"log"
+	"math/rand"
+	"time"
 )
 
 // NewAppConfig create the config structure for us
 func NewAppConfig(hashMethod hash.Hash, cost int) *AppConfig {
+	src := rand.NewSource(time.Now().UnixNano())
+	rnd := rand.New(src)
+
 	config := &AppConfig{
 		HashPassword: nil,
 		Key:          []byte{},
 		Cost:         cost,
+		Rnd:          rnd,
 		HmacConf: &HmacConfig{
 			HashAlgorithm: hashMethod,
 			HashMethod: func() hash.Hash {
@@ -30,7 +36,8 @@ func NewAppConfig(hashMethod hash.Hash, cost int) *AppConfig {
 // KeyGenerator use for creating the key from bytes storage
 func (conf *AppConfig) KeyGenerator() {
 	for i := 0; i < conf.HmacConf.HashAlgorithm.Size(); i += 1 {
-		conf.Key = append(conf.Key, randomBytes[i])
+		j := conf.Rnd.Intn(2000)
+		conf.Key = append(conf.Key, randomBytes[j])
 	}
 }
 
