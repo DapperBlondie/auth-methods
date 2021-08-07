@@ -4,24 +4,31 @@ import (
 	"crypto/sha512"
 	"encoding/hex"
 	"fmt"
+	"math/rand"
 	"testing"
+	"time"
 )
 
 var token = "Alireza1380##"
 
 var config = &AppConfig{
 	HashPassword: nil,
-	Key:          nil,
+	Key:          []byte{},
 	Cost:         15,
 	HmacConf: &HmacConfig{
 		HashMethod:    sha512.New,
 		HashAlgorithm: sha512.New(),
 		HmacSigner:    nil,
 	},
+	Rnd: nil,
 }
 
 func TestHmac(t *testing.T) {
+	src := rand.NewSource(time.Now().UnixNano())
+	rnd := rand.New(src)
+	config.Rnd = rnd
 	config.KeyGenerator()
+
 	sigToken, err := config.HmacSigToken([]byte(token))
 	if err != nil {
 		t.Fatal(err)

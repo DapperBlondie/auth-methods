@@ -4,34 +4,8 @@ import (
 	"crypto/hmac"
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
-	"hash"
 	"log"
-	"math/rand"
-	"time"
 )
-
-// NewAppConfig create the config structure for us
-func NewAppConfig(hashMethod hash.Hash, cost int) *AppConfig {
-	src := rand.NewSource(time.Now().UnixNano())
-	rnd := rand.New(src)
-
-	config := &AppConfig{
-		HashPassword: nil,
-		Key:          []byte{},
-		Cost:         cost,
-		Rnd:          rnd,
-		HmacConf: &HmacConfig{
-			HashAlgorithm: hashMethod,
-			HashMethod: func() hash.Hash {
-				return hashMethod
-			},
-			HmacSigner: nil,
-		},
-	}
-	config.KeyGenerator()
-
-	return config
-}
 
 // KeyGenerator use for creating the key from bytes storage
 func (conf *AppConfig) KeyGenerator() {
@@ -39,6 +13,8 @@ func (conf *AppConfig) KeyGenerator() {
 		j := conf.Rnd.Intn(2000)
 		conf.Key = append(conf.Key, randomBytes[j])
 	}
+
+	return
 }
 
 // GenerateHash with bcrypt package
