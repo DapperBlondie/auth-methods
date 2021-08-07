@@ -3,8 +3,10 @@ package storage
 import (
 	"crypto/hmac"
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 	"log"
+	"time"
 )
 
 // KeyGenerator use for creating the key from bytes storage
@@ -65,4 +67,27 @@ func (conf *AppConfig) CheckSignMsg(token, oldSign []byte) (bool, error) {
 	identifier := hmac.Equal(oldSign, newSign)
 
 	return identifier, nil
+}
+
+// Valid check the validation for our JWT token
+func (u *UserClaims) Valid() error {
+	checkExpire := u.VerifyExpiresAt(time.Now().UnixNano(), true)
+
+	if !checkExpire {
+		return fmt.Errorf("token has expired")
+	}
+
+	return nil
+}
+
+// CreateToken use for creating JWT token
+func (conf *AppConfig) CreateToken(uc *UserClaims) (string, error) {
+	token := jwt.NewWithClaims(conf.JwtConf.JwtKeyMethod, uc)
+	signedToken, err := token.SignedString(conf.Key)
+	if err != nil {
+		log.Println(err.Error())
+		return "", err
+	}
+
+	return signedToken, nil
 }
