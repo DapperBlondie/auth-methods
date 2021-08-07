@@ -12,9 +12,12 @@ func main() {
 	config = &storage.AppConfig{
 		HashPassword: nil,
 		Key:          nil,
-		Cost: 15,
-		HashMethod: sha512.New(),
-		HmacSigner: nil,
+		Cost:         15,
+		HmacConf: &storage.HmacConfig{
+			HashMethod:    sha512.New,
+			HashAlgorithm: sha512.New(),
+			HmacSigner:    nil,
+		},
 	}
 
 	err := config.GenerateHash("Alireza1380##")
