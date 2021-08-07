@@ -93,6 +93,7 @@ func (conf *AppConfig) CreateSignedToken(uc *UserClaims) (string, error) {
 	return signedToken, nil
 }
 
+// ParseSignedToken use for parsing the signed token to our claims
 func (conf *AppConfig) ParseSignedToken(signedToken string) (*UserClaims, error) {
 	token, err := jwt.ParseWithClaims(signedToken, &UserClaims{}, func(t *jwt.Token) (interface{}, error) {
 		if t.Method.Alg() != jwt.SigningMethodHS512.Alg() {
