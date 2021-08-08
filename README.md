@@ -6,7 +6,7 @@
 
 ## HMAC/sha Method
  Have to function for using them for signing and checking the validation of token
- Also you can define your DAO layer everything you want.
+ Also you can define your DataAccess layer everything you want.
 
 ## JWT Method
  Have two handlers for signing and parsing the signed token for getting the claims.
