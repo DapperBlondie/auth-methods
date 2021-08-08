@@ -2,9 +2,11 @@ package storage
 
 import (
 	"crypto/sha512"
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
+	"log"
 	"math/rand"
 	"testing"
 	"time"
@@ -21,15 +23,17 @@ var config = &AppConfig{
 		HashAlgorithm: sha512.New(),
 		HmacSigner:    nil,
 	},
-	Rnd:     nil,
-	JwtConf: &JwtConfig{JwtKeyMethod: jwt.SigningMethodHS512},
+	Rnd:           nil,
+	JwtConf:       &JwtConfig{JwtKeyMethod: jwt.SigningMethodHS512},
+	Base64Encoder: nil,
 }
 
+// TestHmac testing hmac functionalities
 func TestHmac(t *testing.T) {
 	src := rand.NewSource(time.Now().UnixNano())
 	rnd := rand.New(src)
 	config.Rnd = rnd
-	config.KeyGenerator()
+	config.UUIDKeyGenerator()
 
 	sigToken, err := config.HmacSigToken([]byte(token))
 	if err != nil {
@@ -49,11 +53,12 @@ func TestHmac(t *testing.T) {
 	fmt.Println(hex.EncodeToString(sigToken))
 }
 
+// TestJWT testing jwt functionalities
 func TestJWT(t *testing.T) {
 	src := rand.NewSource(time.Now().UnixNano())
 	rnd := rand.New(src)
 	config.Rnd = rnd
-	config.KeyGenerator()
+	config.UUIDKeyGenerator()
 
 	claims := &UserClaims{
 		StandardClaims: jwt.StandardClaims{
@@ -82,4 +87,25 @@ func TestJWT(t *testing.T) {
 	}
 	fmt.Println(cm)
 	return
+}
+
+// TestEncoding testing the base64 functionalities
+func TestEncoding(t *testing.T) {
+	msg := "Hello, How are you ?"
+	fmt.Println(config.EncodingBase64(base64.URLEncoding, msg))
+}
+
+func TestDecoding(t *testing.T) {
+	msg := "Hello, How are you ?"
+	encoded := config.EncodingBase64(base64.URLEncoding, msg)
+	fmt.Println(encoded)
+
+	decoded, err := config.DecodingBase64(encoded)
+	if err != nil {
+		log.Println(err.Error())
+		t.Error(err)
+		return
+	}
+
+	fmt.Println(string(decoded))
 }

@@ -2,9 +2,11 @@ package storage
 
 import (
 	"crypto/hmac"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gofrs/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"time"
@@ -18,6 +20,37 @@ func (conf *AppConfig) KeyGenerator() {
 	}
 
 	return
+}
+
+// UUIDKeyGenerator use random bytes that generates by KeyGenerator function then create uuid based on that
+func (conf *AppConfig) UUIDKeyGenerator() {
+	conf.KeyGenerator()
+	uid := uuid.FromBytesOrNil(conf.Key)
+
+	conf.Key = uid.Bytes()
+}
+
+// EncodingBase64 use for encoding our msg to base64 for using alongside of another functionalities
+func (conf *AppConfig) EncodingBase64(encoding *base64.Encoding, msg string) string {
+	conf.Base64Encoder = encoding
+	encodedStr := conf.Base64Encoder.EncodeToString([]byte(msg))
+
+	return encodedStr
+}
+
+// DecodingBase64 use for decoding our msg to base64 for using alongside of another functionalities
+func (conf *AppConfig) DecodingBase64(encodedStr string) ([]byte, error) {
+	if conf.Base64Encoder == nil {
+		return nil, errors.New("encoder is not provided")
+	}
+
+	result, err := conf.Base64Encoder.DecodeString(encodedStr)
+	if err != nil {
+		log.Println(err.Error())
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // GenerateHash with bcrypt package
