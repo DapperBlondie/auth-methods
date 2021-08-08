@@ -4,6 +4,7 @@ import (
 	"crypto/sha512"
 	"encoding/hex"
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"math/rand"
 	"testing"
 	"time"
@@ -20,7 +21,8 @@ var config = &AppConfig{
 		HashAlgorithm: sha512.New(),
 		HmacSigner:    nil,
 	},
-	Rnd: nil,
+	Rnd:     nil,
+	JwtConf: &JwtConfig{JwtKeyMethod: jwt.SigningMethodHS512},
 }
 
 func TestHmac(t *testing.T) {
@@ -45,4 +47,39 @@ func TestHmac(t *testing.T) {
 	}
 
 	fmt.Println(hex.EncodeToString(sigToken))
+}
+
+func TestJWT(t *testing.T) {
+	src := rand.NewSource(time.Now().UnixNano())
+	rnd := rand.New(src)
+	config.Rnd = rnd
+	config.KeyGenerator()
+
+	claims := &UserClaims{
+		StandardClaims: jwt.StandardClaims{
+			Audience:  "localhost:8080",
+			ExpiresAt: time.Now().Add(time.Hour * 10).UnixNano(),
+			Id:        "123345",
+			IssuedAt:  time.Now().UnixNano(),
+			Issuer:    "localhost:8080",
+			NotBefore: time.Now().UnixNano(),
+			Subject:   "Testing JWT functionalities",
+		},
+		SessionID: 12333,
+	}
+
+	st, err := config.CreateSignedToken(claims)
+	if err != nil {
+		t.Fatal(err.Error())
+		return
+	}
+	fmt.Println(st)
+
+	cm, err := config.ParseSignedToken(st)
+	if err != nil {
+		t.Fatal(err.Error())
+		return
+	}
+	fmt.Println(cm)
+	return
 }
