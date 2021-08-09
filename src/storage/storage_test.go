@@ -95,6 +95,7 @@ func TestEncoding(t *testing.T) {
 	fmt.Println(config.EncodingBase64(base64.URLEncoding, msg))
 }
 
+// TestDecoding testing the base64 functionalities
 func TestDecoding(t *testing.T) {
 	msg := "Hello, How are you ?"
 	encoded := config.EncodingBase64(base64.URLEncoding, msg)
@@ -108,4 +109,16 @@ func TestDecoding(t *testing.T) {
 	}
 
 	fmt.Println(string(decoded))
+}
+
+// TestHashFile testing encrypting a file with sha256
+func TestHashFile(t *testing.T) {
+	eFile, err := config.EncryptSHA256File("./example.txt")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	fmt.Println(hex.EncodeToString(eFile))
+	return
 }

@@ -2,13 +2,16 @@ package storage
 
 import (
 	"crypto/hmac"
+	"crypto/sha256"
 	"encoding/base64"
 	"errors"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gofrs/uuid"
 	"golang.org/x/crypto/bcrypt"
+	"io"
 	"log"
+	"os"
 	"time"
 )
 
@@ -145,4 +148,31 @@ func (conf *AppConfig) ParseSignedToken(signedToken string) (*UserClaims, error)
 	}
 
 	return token.Claims.(*UserClaims), nil
+}
+
+// EncryptSHA256File use for encrypting a file with sha256 method
+func (conf *AppConfig) EncryptSHA256File(filepath string) ([]byte, error) {
+	file, err := os.Open(filepath)
+	if err != nil {
+		log.Println(err.Error() + "; in opening specified filepath")
+		return nil, err
+	}
+	defer func(file *os.File) {
+		err = file.Close()
+		if err != nil {
+			log.Println("error in closing the file")
+			return
+		}
+	}(file)
+
+	conf.HmacConf.HmacSigner = sha256.New()
+	_, err = io.Copy(conf.HmacConf.HmacSigner, file)
+	if err != nil {
+		log.Println("error in copying the file into sha writer")
+		return nil, err
+	}
+
+	eFile := conf.HmacConf.HmacSigner.Sum(nil)
+
+	return eFile, nil
 }

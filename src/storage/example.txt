@@ -1,0 +1,1 @@
+A Gopher must know about everything that exists in golang world.
